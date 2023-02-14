@@ -1,7 +1,8 @@
+import abc
 import enum
 import typing
 from dataclasses import dataclass
-from arcaflow_plugin_sdk import schema
+from arcaflow_plugin_sdk import schema, plugin
 
 
 @dataclass
@@ -29,8 +30,9 @@ class ConnectionParameters:
         schema.name("Password"),
         schema.description("Password to authenticate with."),
     ] = None
-    serverName: typing.Annotated[
+    server_name: typing.Annotated[
         typing.Optional[str],
+        schema.id("serverName"),
         schema.name("TLS server name"),
         schema.description("Server name to verify TLS certificate against.")
     ] = None
@@ -39,9 +41,21 @@ class ConnectionParameters:
         schema.name("Client certificate"),
         schema.description("Client cert data in PEM format"),
     ] = None
+    cert_file: typing.Annotated[
+        typing.Optional[str],
+        schema.id("certFile"),
+        schema.name("Client certificate file"),
+        schema.description("File holding the client cert data in PEM format"),
+    ] = None
     key: typing.Annotated[
         typing.Optional[str],
         schema.name("Client key"),
+        schema.description("Client key in PEM format")
+    ] = None
+    key_file: typing.Annotated[
+        typing.Optional[str],
+        schema.id("keyFile"),
+        schema.name("Client key file"),
         schema.description("Client key in PEM format")
     ] = None
     cacert: typing.Annotated[
@@ -49,43 +63,53 @@ class ConnectionParameters:
         schema.name("CA certificate"),
         schema.description("CA certificate in PEM format")
     ] = None
-    bearerToken: typing.Annotated[
+    cacert_file: typing.Annotated[
         typing.Optional[str],
+        schema.id("cacertFile"),
+        schema.name("CA certificate file"),
+        schema.description("CA certificate file in PEM format. Defaults to the service account CA file.")
+    ] = "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt"
+    bearer_token: typing.Annotated[
+        typing.Optional[str],
+        schema.id("bearerToken"),
         schema.name("Token"),
         schema.description("Secret token of the user/service account"),
     ] = None
+    bearer_token_file: typing.Annotated[
+        typing.Optional[str],
+        schema.id("bearerTokenFile"),
+        schema.name("Token file"),
+        schema.description("File holding the secret token of the user/service account. Defaults to the service account CA file."),
+    ] = "/var/run/secrets/kubernetes.io/serviceaccount"
 
 
 @dataclass
 class KubeConfigClusterParams:
     server: typing.Annotated[str, schema.id("server"), schema.name("Server")]
-    client_certificate: typing.Annotated[
-        str,
+    certificate_authority: typing.Annotated[
+        typing.Optional[str],
         schema.id("certificate-authority"),
         schema.name("Certificate authority path"),
         schema.description(
             "Path to the certificate authority file. This path may not be portable across plugins, use with care."
         ),
         schema.conflicts("certificate-authority-data"),
-        schema.required_if_not("insecure-skip-tls-verify")
-    ]
-    client_certificate_data: typing.Annotated[
-        str,
+    ] = None
+    certificate_authority_data: typing.Annotated[
+        typing.Optional[str],
         schema.id("certificate-authority-data"),
         schema.name("Certificate authority data"),
         schema.description(
             "Base64-encoded PEM data for the certificate authority."
         ),
         schema.conflicts("certificate-authority"),
-        schema.required_if_not("insecure-skip-tls-verify")
-    ]
+    ] = None
     insecure_skip_tls_verify: typing.Annotated[
-        typing.Optional[bool],
+        bool,
         schema.id("insecure-skip-tls-verify"),
         schema.name("Disable TLS certificate verification"),
         schema.description("Disables checking for the Kubernetes server certificate validity. Not recommended.")
     ] = False
-
 
 
 @dataclass
@@ -113,15 +137,26 @@ class KubeConfigContext:
 
 @dataclass
 class KubeConfigUserParameters:
+    username: typing.Annotated[
+        typing.Optional[str],
+        schema.name("Username"),
+        schema.description(
+            "Username for Kubernetes authentication"
+        ),
+    ] = None
+    password: typing.Annotated[
+        typing.Optional[str],
+        schema.name("Password"),
+        schema.description(
+            "Password for Kubernetes authentication"
+        ),
+    ] = None
     token: typing.Annotated[
-        str,
-        schema.required_if_not("client-certificate"),
-        schema.required_if_not("client-certificate-data"),
-        schema.required_if_not("client-key"),
-        schema.required_if_not("client-key-data"),
+        typing.Optional[str],
+        schema.name("Bearer token")
     ] = None
     client_certificate: typing.Annotated[
-        str,
+        typing.Optional[str],
         schema.id("client-certificate"),
         schema.name("Client certificate path"),
         schema.description(
@@ -129,13 +164,13 @@ class KubeConfigUserParameters:
         ),
     ] = None
     client_certificate_data: typing.Annotated[
-        str,
+        typing.Optional[str],
         schema.id("client-certificate-data"),
         schema.name("Client certificate"),
         schema.description("Client certificate data Base64-encoded in PEM format."),
     ] = None
     client_key: typing.Annotated[
-        str,
+        typing.Optional[str],
         schema.id("client-key"),
         schema.name("Client key path"),
         schema.description(
@@ -143,7 +178,7 @@ class KubeConfigUserParameters:
         ),
     ] = None
     client_key_data: typing.Annotated[
-        str,
+        typing.Optional[str],
         schema.id("client-key-data"),
         schema.name("Client key"),
         schema.description("Client key data Base64-encoded in PEM format."),
@@ -152,6 +187,9 @@ class KubeConfigUserParameters:
 
 @dataclass
 class KubeConfigUser:
+    """
+    This class represents a user entry in a kubeconfig.
+    """
     name: typing.Annotated[str, schema.name("Name")]
     user: typing.Annotated[KubeConfigUserParameters, schema.name("User")]
 
@@ -160,15 +198,51 @@ class KubeConfigKindEnum(enum.Enum):
     """
     This enum forces the Kind to always be "Config" for KubeConfig files.
     """
-    Config="Config"
+    Config = "Config"
 
 
 @dataclass
 class KubeConfig:
+    """
+    This class represents a full KubeConfig.
+    """
     kind: typing.Annotated[KubeConfigKindEnum, schema.id("kind")]
     api_version: typing.Annotated[str, schema.id("apiVersion"), schema.min(2)]
     clusters: typing.Annotated[typing.List[KubeConfigCluster], schema.id("clusters")]
     contexts: typing.Annotated[typing.List[KubeConfigContext], schema.id("contexts")]
     users: typing.Annotated[typing.List[KubeConfigUser], schema.id("users")]
-    current_context: typing.Annotated[typing.Optional[str], schema.name("current-context")] = None
-    preferences: typing.Annotated[typing.Optional[any], schema.name("preferences")] = None
+    current_context: typing.Annotated[typing.Optional[str], schema.id("current-context")] = None
+    preferences: typing.Annotated[typing.Optional[typing.Any], schema.id("preferences")] = None
+
+
+@dataclass
+class KubeConfigException(Exception, abc.ABC):
+    """
+    This class represents a generic exception while parsing a kubeconfig file.
+    """
+    message: typing.Annotated[str, schema.name("Message")]
+
+    def __init__(self, message: str):
+        self.message = message
+
+
+class InvalidKubeConfigException(KubeConfigException):
+    """
+    This exception indicates that the kubeconfig file is invalid.
+    """
+
+    def __str__(self) -> str:
+        return f"Invalid kubeconfig: {self.message}"
+
+
+class UnusableKubeConfigException(KubeConfigException):
+    """
+    This exception indicates that the kubeconfig file is valid, but not usable (e.g. no current-context is set).
+    """
+
+    def __str__(self) -> str:
+        return f"Valid but unusable kubeconfig: {self.message}"
+
+
+kubeconfig_schema = plugin.build_object_schema(KubeConfig)
+connection_schema = plugin.build_object_schema(ConnectionParameters)
