@@ -96,7 +96,7 @@ def kubeconfig_to_connection(
     >>> config = test_kubeconfig()
     >>> connection_config = kubeconfig_to_connection(parse_kubeconfig(config))
     >>> connection_config.host
-    '127.0.0.1:6443'
+    'https://127.0.0.1:6443'
 
     :param kubeconfig: The parsed KubeConfig data structure.
     :param inline_files: Inline referenced external files (e.g. certificates). Defaults to True to support transporting
@@ -151,9 +151,7 @@ def kubeconfig_to_connection(
             "authentication with CA certificates."
         )
 
-    conn = ConnectionParameters(
-        cluster.server.replace("https://", "", 1).replace("http://", "", 1)
-    )
+    conn = ConnectionParameters(cluster.server)
     if cluster.certificate_authority is not None:
         if inline_files:
             try:
@@ -290,7 +288,7 @@ def connection_to_kubeconfig(data: ConnectionParameters) -> KubeConfig:
     if data.host is None:
         raise ConnectionException("No cluster host found in connection")
 
-    cluster_params = KubeConfigClusterParams(f"https://{data.host}")
+    cluster_params = KubeConfigClusterParams(data.host)
     if data.cacert is not None:
         cluster_params.certificate_authority_data = base64.b64encode(
             data.cacert.encode("ascii")
