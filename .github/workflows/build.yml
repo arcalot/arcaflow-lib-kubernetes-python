@@ -30,7 +30,7 @@ jobs:
         run: |
           pip install black flake8 isort
           isort --profile black .
-          black .
+          black --line-length 79 .
           flake8 .
       - name: Install Python Poetry
         uses: snok/install-poetry@v1.3.3
@@ -48,6 +48,7 @@ jobs:
         run: |
           poetry run html2text --ignore-images --ignore-links -b 0 htmlcov/index.html >> $GITHUB_STEP_SUMMARY
       - name: Generate documentation
+        if: ${{ matrix.python-version == '3.9'}}
         run: |
           poetry run sphinx-apidoc -o docs/ -f -a -e src/ --doc-project "Kubernetes library for Arcaflow"
           poetry run make -C docs html
@@ -64,6 +65,13 @@ jobs:
         with:
           name: coverage
           path: htmlcov
+          if-no-files-found: error
+      - name: Upload Sphinx documentation
+        if: ${{ matrix.python-version == '3.9'}}
+        uses: actions/upload-artifact@v3
+        with:
+          name: documentation
+          path: docs/build/html
           if-no-files-found: error
   publish:
     name: Publish

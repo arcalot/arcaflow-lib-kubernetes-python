@@ -2,7 +2,8 @@ import abc
 import enum
 import typing
 from dataclasses import dataclass
-from arcaflow_plugin_sdk import schema, plugin
+
+from arcaflow_plugin_sdk import plugin, schema
 
 
 @dataclass
@@ -10,6 +11,7 @@ class ConnectionParameters:
     """
     This is a connection specification matching the Go connection structure.
     """
+
     host: typing.Annotated[
         str,
         schema.name("Server"),
@@ -34,7 +36,7 @@ class ConnectionParameters:
         typing.Optional[str],
         schema.id("serverName"),
         schema.name("TLS server name"),
-        schema.description("Server name to verify TLS certificate against.")
+        schema.description("Server name to verify TLS certificate against."),
     ] = None
     cert: typing.Annotated[
         typing.Optional[str],
@@ -50,25 +52,28 @@ class ConnectionParameters:
     key: typing.Annotated[
         typing.Optional[str],
         schema.name("Client key"),
-        schema.description("Client key in PEM format")
+        schema.description("Client key in PEM format"),
     ] = None
     key_file: typing.Annotated[
         typing.Optional[str],
         schema.id("keyFile"),
         schema.name("Client key file"),
-        schema.description("Client key in PEM format")
+        schema.description("Client key in PEM format"),
     ] = None
     cacert: typing.Annotated[
         typing.Optional[str],
         schema.name("CA certificate"),
-        schema.description("CA certificate in PEM format")
+        schema.description("CA certificate in PEM format"),
     ] = None
     cacert_file: typing.Annotated[
         typing.Optional[str],
         schema.id("cacertFile"),
         schema.name("CA certificate file"),
-        schema.description("CA certificate file in PEM format. Defaults to the service account CA file.")
-    ] = "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt"
+        schema.description(
+            "CA certificate file in PEM format. "
+            "Defaults to the service account CA file."
+        ),
+    ] = None
     bearer_token: typing.Annotated[
         typing.Optional[str],
         schema.id("bearerToken"),
@@ -79,8 +84,12 @@ class ConnectionParameters:
         typing.Optional[str],
         schema.id("bearerTokenFile"),
         schema.name("Token file"),
-        schema.description("File holding the secret token of the user/service account. Defaults to the service account CA file."),
-    ] = "/var/run/secrets/kubernetes.io/serviceaccount"
+        schema.description(
+            "File holding the secret token of the "
+            "user/service account. Defaults to the "
+            "service account CA file."
+        ),
+    ] = None
 
 
 @dataclass
@@ -91,7 +100,9 @@ class KubeConfigClusterParams:
         schema.id("certificate-authority"),
         schema.name("Certificate authority path"),
         schema.description(
-            "Path to the certificate authority file. This path may not be portable across plugins, use with care."
+            "Path to the certificate authority file."
+            " This path may not be portable across plugins"
+            ", use with care."
         ),
         schema.conflicts("certificate-authority-data"),
     ] = None
@@ -108,7 +119,10 @@ class KubeConfigClusterParams:
         bool,
         schema.id("insecure-skip-tls-verify"),
         schema.name("Disable TLS certificate verification"),
-        schema.description("Disables checking for the Kubernetes server certificate validity. Not recommended.")
+        schema.description(
+            "Disables checking for the Kubernetes "
+            "server certificate validity. Not recommended."
+        ),
     ] = False
 
 
@@ -119,7 +133,7 @@ class KubeConfigCluster:
 
 
 @dataclass
-class KubeConfigContextParameters:
+class KubeConfigContextParams:
     cluster: typing.Annotated[str, schema.name("Cluster")]
     user: typing.Annotated[str, schema.name("User")]
     namespace: typing.Annotated[
@@ -132,7 +146,7 @@ class KubeConfigContextParameters:
 @dataclass
 class KubeConfigContext:
     name: typing.Annotated[str, schema.name("Name")]
-    context: typing.Annotated[KubeConfigContextParameters, schema.name("context")]
+    context: typing.Annotated[KubeConfigContextParams, schema.name("context")]
 
 
 @dataclass
@@ -140,41 +154,40 @@ class KubeConfigUserParameters:
     username: typing.Annotated[
         typing.Optional[str],
         schema.name("Username"),
-        schema.description(
-            "Username for Kubernetes authentication"
-        ),
+        schema.description("Username for Kubernetes authentication"),
     ] = None
     password: typing.Annotated[
         typing.Optional[str],
         schema.name("Password"),
-        schema.description(
-            "Password for Kubernetes authentication"
-        ),
+        schema.description("Password for Kubernetes authentication"),
     ] = None
     token: typing.Annotated[
-        typing.Optional[str],
-        schema.name("Bearer token")
+        typing.Optional[str], schema.name("Bearer token")
     ] = None
     client_certificate: typing.Annotated[
         typing.Optional[str],
         schema.id("client-certificate"),
         schema.name("Client certificate path"),
         schema.description(
-            "Path to the client certificate file. This path may not be portable across plugins, use with care."
+            "Path to the client certificate file. "
+            "This path may not be portable across plugins, use with care."
         ),
     ] = None
     client_certificate_data: typing.Annotated[
         typing.Optional[str],
         schema.id("client-certificate-data"),
         schema.name("Client certificate"),
-        schema.description("Client certificate data Base64-encoded in PEM format."),
+        schema.description(
+            "Client certificate data Base64-encoded in PEM format."
+        ),
     ] = None
     client_key: typing.Annotated[
         typing.Optional[str],
         schema.id("client-key"),
         schema.name("Client key path"),
         schema.description(
-            "Path to the client key file. This path may not be portable across plugins, use with care."
+            "Path to the client key file. "
+            "This path may not be portable across plugins, use with care."
         ),
     ] = None
     client_key_data: typing.Annotated[
@@ -190,6 +203,7 @@ class KubeConfigUser:
     """
     This class represents a user entry in a kubeconfig.
     """
+
     name: typing.Annotated[str, schema.name("Name")]
     user: typing.Annotated[KubeConfigUserParameters, schema.name("User")]
 
@@ -198,6 +212,7 @@ class KubeConfigKindEnum(enum.Enum):
     """
     This enum forces the Kind to always be "Config" for KubeConfig files.
     """
+
     Config = "Config"
 
 
@@ -206,13 +221,22 @@ class KubeConfig:
     """
     This class represents a full KubeConfig.
     """
-    kind: typing.Annotated[KubeConfigKindEnum, schema.id("kind")]
+
+    kind: typing.Annotated[str, schema.id("kind")]
     api_version: typing.Annotated[str, schema.id("apiVersion"), schema.min(2)]
-    clusters: typing.Annotated[typing.List[KubeConfigCluster], schema.id("clusters")]
-    contexts: typing.Annotated[typing.List[KubeConfigContext], schema.id("contexts")]
+    clusters: typing.Annotated[
+        typing.List[KubeConfigCluster], schema.id("clusters")
+    ]  # NOQA
+    contexts: typing.Annotated[
+        typing.List[KubeConfigContext], schema.id("contexts")
+    ]  # NOQA
     users: typing.Annotated[typing.List[KubeConfigUser], schema.id("users")]
-    current_context: typing.Annotated[typing.Optional[str], schema.id("current-context")] = None
-    preferences: typing.Annotated[typing.Optional[typing.Any], schema.id("preferences")] = None
+    current_context: typing.Annotated[
+        typing.Optional[str], schema.id("current-context")
+    ] = None  # NOQA
+    preferences: typing.Annotated[
+        typing.Optional[typing.Any], schema.id("preferences")
+    ] = None  # NOQA
 
 
 @dataclass
@@ -220,6 +244,19 @@ class KubeConfigException(Exception, abc.ABC):
     """
     This class represents a generic exception while parsing a kubeconfig file.
     """
+
+    message: typing.Annotated[str, schema.name("Message")]
+
+    def __init__(self, message: str):
+        self.message = message
+
+
+@dataclass
+class ConnectionException(Exception, abc.ABC):
+    """
+    This class represents a generic exception while parsing a Kubernetes Connection.
+    """  # NOQA
+
     message: typing.Annotated[str, schema.name("Message")]
 
     def __init__(self, message: str):
@@ -235,10 +272,20 @@ class InvalidKubeConfigException(KubeConfigException):
         return f"Invalid kubeconfig: {self.message}"
 
 
+"""
+    This exception indicates that the kubernetes connection is invalid.
+    """  # NOQA
+
+
+class InvalidConnectionException(ConnectionException):
+    def __str__(self) -> str:
+        return f"Invalid connection: {self.message}"
+
+
 class UnusableKubeConfigException(KubeConfigException):
     """
     This exception indicates that the kubeconfig file is valid, but not usable (e.g. no current-context is set).
-    """
+    """  # NOQA
 
     def __str__(self) -> str:
         return f"Valid but unusable kubeconfig: {self.message}"
