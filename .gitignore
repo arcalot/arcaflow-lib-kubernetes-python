@@ -1,2 +1,6 @@
 venv
-.pyc
+*.pyc
+__pycache__
+.coverage
+dist
+.idea
