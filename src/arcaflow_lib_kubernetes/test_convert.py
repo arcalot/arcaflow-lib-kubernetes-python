@@ -15,6 +15,7 @@ class TestFixtures:
     kubeconfigNoHost: str
     kubeconfigNoContext: str
     kubeconfigSkipTLS: str
+    kubeconfigExtensions: str
     tokenFile: str
 
     def __init__(self):
@@ -76,6 +77,12 @@ class TestFixtures:
         except Exception:
             raise Exception("impossible to read tokenfile fixture")
 
+        try:
+            with open(os.path.join(test_data, "kubeconfig-extensions.yaml")) as f:
+                self.kubeconfigExtensions = f.read()
+        except Exception:
+            raise Exception("impossible to read kubeconfig-extensions fixture")
+
 
 class TestConvert(unittest.TestCase):
     fixtures = TestFixtures()
@@ -118,6 +125,10 @@ class TestConvert(unittest.TestCase):
 
             with self.assertRaises(InvalidKubeConfigException):
                 convert.parse_kubeconfig(self.fixtures.kubeconfigNoHost)
+
+            # test success on parsing kubeconfig with extensions
+            kubeconfig = convert.parse_kubeconfig(self.fixtures.kubeconfigExtensions)
+            self.assertIsNotNone(kubeconfig)
 
         except Exception as e:
             self.fail(f"kubeconfig_to_connection exception : {e}")
