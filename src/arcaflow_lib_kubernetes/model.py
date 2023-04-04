@@ -124,6 +124,12 @@ class KubeConfigClusterParams:
             "server certificate validity. Not recommended."
         ),
     ] = False
+    extensions: typing.Annotated[
+        typing.Optional[typing.Any],
+        schema.id("extensions"),
+        schema.description("minikube kube config section "
+                           "introduced to avoid local tests issues")
+    ] = None  # NOQA
 
 
 @dataclass
@@ -141,6 +147,12 @@ class KubeConfigContextParams:
         schema.name("Namespace"),
         schema.description("Default namespace for operations. Often ignored."),
     ] = None
+    extensions: typing.Annotated[
+        typing.Optional[typing.Any],
+        schema.id("extensions"),
+        schema.description("minikube kube config section "
+                           "introduced to avoid local tests issues")
+    ] = None  # NOQA
 
 
 @dataclass
