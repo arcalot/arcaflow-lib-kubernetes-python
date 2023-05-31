@@ -136,7 +136,6 @@ def kubeconfig_to_connection(
     for u in kubeconfig.users:
         if u.name == current_user:
             user = u.user
-            user.username = u.name
     if user is None:
         raise InvalidKubeConfigException(
             f"Current user {current_user} not found in kubeconfig file."
