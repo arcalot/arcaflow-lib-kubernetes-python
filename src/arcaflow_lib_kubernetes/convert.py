@@ -365,10 +365,10 @@ def connect(connection: ConnectionParameters) -> client.ApiClient:
 
     config.username = connection.username
     config.password = connection.password
-    config.api_key_prefix = "Bearer"
+    config.api_key_prefix = {"authorization": "Bearer"}
 
     if connection.bearer_token is not None:
-        config.api_key = connection.bearer_token
+        config.api_key = {'authorization': connection.bearer_token}  
 
     if connection.bearer_token_file is not None:
         try:
