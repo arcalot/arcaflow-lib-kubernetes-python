@@ -78,7 +78,9 @@ class TestFixtures:
             raise Exception("impossible to read tokenfile fixture")
 
         try:
-            with open(os.path.join(test_data, "kubeconfig-extensions.yaml")) as f:
+            with open(
+                os.path.join(test_data, "kubeconfig-extensions.yaml")
+            ) as f:
                 self.kubeconfigExtensions = f.read()
         except Exception:
             raise Exception("impossible to read kubeconfig-extensions fixture")
@@ -127,7 +129,9 @@ class TestConvert(unittest.TestCase):
                 convert.parse_kubeconfig(self.fixtures.kubeconfigNoHost)
 
             # test success on parsing kubeconfig with extensions
-            kubeconfig = convert.parse_kubeconfig(self.fixtures.kubeconfigExtensions)
+            kubeconfig = convert.parse_kubeconfig(
+                self.fixtures.kubeconfigExtensions
+            )
             self.assertIsNotNone(kubeconfig)
 
         except Exception as e:

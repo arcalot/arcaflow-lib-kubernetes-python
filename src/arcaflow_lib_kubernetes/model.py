@@ -127,8 +127,10 @@ class KubeConfigClusterParams:
     extensions: typing.Annotated[
         typing.Optional[typing.Any],
         schema.id("extensions"),
-        schema.description("minikube kube config section "
-                           "introduced to avoid local tests issues")
+        schema.description(
+            "minikube kube config section "
+            "introduced to avoid local tests issues"
+        ),
     ] = None  # NOQA
 
 
@@ -150,8 +152,10 @@ class KubeConfigContextParams:
     extensions: typing.Annotated[
         typing.Optional[typing.Any],
         schema.id("extensions"),
-        schema.description("minikube kube config section "
-                           "introduced to avoid local tests issues")
+        schema.description(
+            "minikube kube config section "
+            "introduced to avoid local tests issues"
+        ),
     ] = None  # NOQA
 
 

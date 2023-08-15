@@ -168,9 +168,9 @@ def kubeconfig_to_connection(
 
     if cluster.certificate_authority_data is not None:
         try:
-            conn.cacert = base64.b64decode(cluster.certificate_authority_data).decode(
-                "ascii"
-            )
+            conn.cacert = base64.b64decode(
+                cluster.certificate_authority_data
+            ).decode("ascii")
         except Exception as e:
             raise InvalidKubeConfigException(
                 f"Certificate authority data is not readable: {e.__str__()}"
@@ -192,7 +192,9 @@ def kubeconfig_to_connection(
 
     if user.client_certificate_data is not None:
         try:
-            conn.cert = base64.b64decode(user.client_certificate_data).decode("ascii")
+            conn.cert = base64.b64decode(user.client_certificate_data).decode(
+                "ascii"
+            )
         except Exception as e:
             raise InvalidKubeConfigException(
                 f"User certificate data is not readable: {e.__str__()}"
@@ -299,14 +301,16 @@ def connection_to_kubeconfig(data: ConnectionParameters) -> KubeConfig:
     cluster = KubeConfigCluster("default", cluster_params)
 
     # contexts
-    context_params = KubeConfigContextParams("default", data.username, "default")
+    context_params = KubeConfigContextParams(
+        "default", data.username, "default"
+    )
     context = KubeConfigContext("default", context_params)
     # users
     user_params = KubeConfigUserParameters()
     if data.key is not None:
-        user_params.client_key_data = base64.b64encode(data.key.encode("ascii")).decode(
-            "ascii"
-        )
+        user_params.client_key_data = base64.b64encode(
+            data.key.encode("ascii")
+        ).decode("ascii")
     if data.key_file is not None:
         user_params.client_key = data.key_file
 
@@ -368,7 +372,7 @@ def connect(connection: ConnectionParameters) -> client.ApiClient:
     config.api_key_prefix = {"authorization": "Bearer"}
 
     if connection.bearer_token is not None:
-        config.api_key = {'authorization': connection.bearer_token}  
+        config.api_key = {"authorization": connection.bearer_token}
 
     if connection.bearer_token_file is not None:
         try:
