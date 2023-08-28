@@ -136,6 +136,7 @@ def kubeconfig_to_connection(
     for u in kubeconfig.users:
         if u.name == current_user:
             user = u.user
+            user_name = u.name
     if user is None:
         raise InvalidKubeConfigException(
             f"Current user {current_user} not found in kubeconfig file."
@@ -220,6 +221,7 @@ def kubeconfig_to_connection(
                 f"User key data is not readable: {e.__str__()}"
             ) from e
 
+    conn.name = user_name
     conn.username = user.username
     conn.password = user.password
     conn.bearer_token = user.token
@@ -300,9 +302,8 @@ def connection_to_kubeconfig(data: ConnectionParameters) -> KubeConfig:
     cluster = KubeConfigCluster("default", cluster_params)
 
     # contexts
-    context_params = KubeConfigContextParams(
-        "default", data.username, "default"
-    )
+    context_params = KubeConfigContextParams("default", data.name, "default")
+
     context = KubeConfigContext("default", context_params)
     # users
     user_params = KubeConfigUserParameters()
@@ -335,7 +336,7 @@ def connection_to_kubeconfig(data: ConnectionParameters) -> KubeConfig:
     user_params.username = data.username
     user_params.password = data.password
 
-    user = KubeConfigUser(data.username, user_params)
+    user = KubeConfigUser(data.name, user_params)
     kubeconfig = KubeConfig("Config", "v1", [cluster], [context], [user])
     kubeconfig.current_context = "default"
     kubeconfig.preferences = {}
