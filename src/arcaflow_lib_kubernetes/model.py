@@ -96,6 +96,16 @@ class ConnectionParameters:
         ),
     ] = None
 
+    insecure_skip_tls_verify: typing.Annotated[
+        bool,
+        schema.id("insecure-skip-tls-verify"),
+        schema.name("Disable TLS certificate verification"),
+        schema.description(
+            "Disables checking for the Kubernetes "
+            "server certificate validity. Not recommended."
+        ),
+    ] = False
+
 
 @dataclass
 class KubeConfigClusterParams:
