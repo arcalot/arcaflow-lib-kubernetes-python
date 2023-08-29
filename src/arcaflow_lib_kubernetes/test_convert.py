@@ -66,12 +66,6 @@ class TestFixtures:
             raise Exception("impossible to read kubeconfig-nocontext fixture")
 
         try:
-            with open(os.path.join(test_data, "kubeconfig-tlsskip.yaml")) as f:
-                self.kubeconfigSkipTLS = f.read()
-        except Exception:
-            raise Exception("impossible to read kubeconfig-tlsskip fixture")
-
-        try:
             with open(os.path.join(test_data, "tokenfile")) as f:
                 self.tokenFile = f.read()
         except Exception:
@@ -120,10 +114,6 @@ class TestConvert(unittest.TestCase):
             # test failing with kubeconfig with no context
             with self.assertRaises(UnusableKubeConfigException):
                 convert.kubeconfig_to_connection(kubeconfig_nocontext)
-
-            # test failing with kubeconfig with tls skip verify
-            with self.assertRaises(InvalidKubeConfigException):
-                convert.parse_kubeconfig(self.fixtures.kubeconfigSkipTLS)
 
             with self.assertRaises(InvalidKubeConfigException):
                 convert.parse_kubeconfig(self.fixtures.kubeconfigNoHost)

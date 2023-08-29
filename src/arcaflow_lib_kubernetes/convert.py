@@ -1,4 +1,5 @@
 import base64
+import logging
 import tempfile
 
 import yaml
@@ -33,6 +34,7 @@ clusters:
 - cluster:
     certificate-authority-data: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSUM5ekNDQWQrZ0F3SUJBZ0lVV01PTVBNMVUrRi9uNXN6TSthYzlMcGZISHB3d0RRWUpLb1pJaHZjTkFRRUwKQlFBd0hqRWNNQm9HQTFVRUF3d1RhM1ZpZFc1MGRTNXNiMk5oYkdSdmJXRnBiakFlRncweU1URXlNRFl4T0RBdwpNRFJhRncwek1URXlNRFF4T0RBd01EUmFNQjR4SERBYUJnTlZCQU1NRTJ0MVluVnVkSFV1Ykc5allXeGtiMjFoCmFXNHdnZ0VpTUEwR0NTcUdTSWIzRFFFQkFRVUFBNElCRHdBd2dnRUtBb0lCQVFDNExhcG00SDB0T1NuYTNXVisKdzI4a0tOWWRwaHhYOUtvNjUwVGlOK2c5ZFNQU3VZK0V6T1JVOWVONlgyWUZkMEJmVFNodno4Y25rclAvNysxegpETEoxQ3MwRi9haEV3ZDQxQXN5UGFjbnRiVE80dGRLWm9POUdyODR3YVdBN1hSZmtEc2ZxRGN1YW5UTmVmT1hpCkdGbmdDVzU5Q285M056alB1eEFrakJxdVF6eE5GQkgwRlJPbXJtVFJ4cnVLZXo0aFFuUW1OWEFUNnp0M21udzMKWUtWTzU4b2xlcUxUcjVHNlRtVFQyYTZpVGdtdWY2N0cvaVZlalJGbkw3YkNHWmgzSjlCSTNMcVpqRzE4dWxvbgpaVDdQcGQrQTlnaTJOTm9UZlI2TVB5SndxU1BCL0xZQU5ZNGRoZDVJYlVydDZzbmViTlRZSHV2T0tZTDdNTWRMCmVMSzFBZ01CQUFHakxUQXJNQWtHQTFVZEV3UUNNQUF3SGdZRFZSMFJCQmN3RllJVGEzVmlkVzUwZFM1c2IyTmgKYkdSdmJXRnBiakFOQmdrcWhraUc5dzBCQVFzRkFBT0NBUUVBQTVqUHVpZVlnMExySE1PSkxYY0N4d3EvVzBDNApZeFpncVd3VHF5VHNCZjVKdDlhYTk0SkZTc2dHQWdzUTN3NnA2SlBtL0MyR05MY3U4ZWxjV0E4UXViQWxueXRRCnF1cEh5WnYrZ08wMG83TXdrejZrTUxqQVZ0QllkRzJnZ21FRjViTEk5czBKSEhjUGpHUkl1VHV0Z0tHV1dPWHgKSEg4T0RzaG9wZHRXMktrR2c2aThKaEpYaWVIbzkzTHptM00xRUNGcXAvMEdtNkN1RFphVVA2SGpJMWRrYllLdgpsSHNVZ1U1SmZjSWhNYmJLdUllTzRkc1YvT3FHcm9iNW5vcmRjaExBQmRDTnc1cmU5T1NXZGZ1VVhSK0ViZVhrCjVFM0tFYzA1RGNjcGV2a1NTdlJ4SVQrQzNMOTltWGcxL3B5NEw3VUhvNFFLTXlqWXJXTWlLRlVKV1E9PQotLS0tLUVORCBDRVJUSUZJQ0FURS0tLS0tCg==
     server: https://127.0.0.1:6443
+    insecure-skip-tls-verify: true
   name: default
 contexts:
 - context:
@@ -143,15 +145,11 @@ def kubeconfig_to_connection(
         )
 
     if cluster.insecure_skip_tls_verify:
-        raise UnusableKubeConfigException(
-            "The Kubeconfig is set to skip TLS verification."
-            "This is not supported by "
-            "Arcaflow and there is no reason to use this option."
-            "Please set up your Kubernetes TLS "
-            "authentication with CA certificates."
-        )
+        logging.warning("You're establishing an insecure connection, "
+                        "do it at your own risk.")
 
     conn = ConnectionParameters(cluster.server)
+    conn.insecure_skip_tls_verify = cluster.insecure_skip_tls_verify
     if cluster.certificate_authority is not None:
         if inline_files:
             try:
@@ -226,6 +224,7 @@ def kubeconfig_to_connection(
     conn.password = user.password
     conn.bearer_token = user.token
 
+
     try:
         connection_schema.validate(conn)
     except Exception as e:
@@ -255,7 +254,7 @@ def connection_to_kubeconfig(data: ConnectionParameters) -> KubeConfig:
     >>> kbconf.clusters[0].cluster.certificate_authority_data
     'LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSUM5ekNDQWQrZ0F3SUJBZ0lVV01PTVBNMVUrRi9uNXN6TSthYzlMcGZISHB3d0RRWUpLb1pJaHZjTkFRRUwKQlFBd0hqRWNNQm9HQTFVRUF3d1RhM1ZpZFc1MGRTNXNiMk5oYkdSdmJXRnBiakFlRncweU1URXlNRFl4T0RBdwpNRFJhRncwek1URXlNRFF4T0RBd01EUmFNQjR4SERBYUJnTlZCQU1NRTJ0MVluVnVkSFV1Ykc5allXeGtiMjFoCmFXNHdnZ0VpTUEwR0NTcUdTSWIzRFFFQkFRVUFBNElCRHdBd2dnRUtBb0lCQVFDNExhcG00SDB0T1NuYTNXVisKdzI4a0tOWWRwaHhYOUtvNjUwVGlOK2c5ZFNQU3VZK0V6T1JVOWVONlgyWUZkMEJmVFNodno4Y25rclAvNysxegpETEoxQ3MwRi9haEV3ZDQxQXN5UGFjbnRiVE80dGRLWm9POUdyODR3YVdBN1hSZmtEc2ZxRGN1YW5UTmVmT1hpCkdGbmdDVzU5Q285M056alB1eEFrakJxdVF6eE5GQkgwRlJPbXJtVFJ4cnVLZXo0aFFuUW1OWEFUNnp0M21udzMKWUtWTzU4b2xlcUxUcjVHNlRtVFQyYTZpVGdtdWY2N0cvaVZlalJGbkw3YkNHWmgzSjlCSTNMcVpqRzE4dWxvbgpaVDdQcGQrQTlnaTJOTm9UZlI2TVB5SndxU1BCL0xZQU5ZNGRoZDVJYlVydDZzbmViTlRZSHV2T0tZTDdNTWRMCmVMSzFBZ01CQUFHakxUQXJNQWtHQTFVZEV3UUNNQUF3SGdZRFZSMFJCQmN3RllJVGEzVmlkVzUwZFM1c2IyTmgKYkdSdmJXRnBiakFOQmdrcWhraUc5dzBCQVFzRkFBT0NBUUVBQTVqUHVpZVlnMExySE1PSkxYY0N4d3EvVzBDNApZeFpncVd3VHF5VHNCZjVKdDlhYTk0SkZTc2dHQWdzUTN3NnA2SlBtL0MyR05MY3U4ZWxjV0E4UXViQWxueXRRCnF1cEh5WnYrZ08wMG83TXdrejZrTUxqQVZ0QllkRzJnZ21FRjViTEk5czBKSEhjUGpHUkl1VHV0Z0tHV1dPWHgKSEg4T0RzaG9wZHRXMktrR2c2aThKaEpYaWVIbzkzTHptM00xRUNGcXAvMEdtNkN1RFphVVA2SGpJMWRrYllLdgpsSHNVZ1U1SmZjSWhNYmJLdUllTzRkc1YvT3FHcm9iNW5vcmRjaExBQmRDTnc1cmU5T1NXZGZ1VVhSK0ViZVhrCjVFM0tFYzA1RGNjcGV2a1NTdlJ4SVQrQzNMOTltWGcxL3B5NEw3VUhvNFFLTXlqWXJXTWlLRlVKV1E9PQotLS0tLUVORCBDRVJUSUZJQ0FURS0tLS0tCg=='
     >>> kbconf.clusters[0].cluster.insecure_skip_tls_verify
-    False
+    True
     >>> kbconf.current_context
     'default'
     >>> len(kbconf.contexts)
@@ -299,6 +298,7 @@ def connection_to_kubeconfig(data: ConnectionParameters) -> KubeConfig:
     if data.cacert_file is not None:
         cluster_params.certificate_authority = data.cacert_file
 
+    cluster_params.insecure_skip_tls_verify = data.insecure_skip_tls_verify
     cluster = KubeConfigCluster("default", cluster_params)
 
     # contexts
@@ -384,6 +384,8 @@ def connect(connection: ConnectionParameters) -> client.ApiClient:
                 f"{connection.bearer_token_file} was not "
                 f"readable: {e.__str__()}"
             ) from e
+
+    config.verify_ssl = not connection.insecure_skip_tls_verify
 
     if connection.cacert_file is not None:
         config.ssl_ca_cert = connection.cacert_file
