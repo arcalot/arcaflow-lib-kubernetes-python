@@ -22,6 +22,11 @@ class ConnectionParameters:
         schema.name("API path"),
         schema.description("Kubernetes API path"),
     ] = None
+    name: typing.Annotated[
+        typing.Optional[str],
+        schema.name("Name"),
+        schema.description("Name to authenticate with."),
+    ] = None
     username: typing.Annotated[
         typing.Optional[str],
         schema.name("Username"),
