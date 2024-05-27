@@ -18,12 +18,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check out code
-        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4
+        uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29 # v4
       - name: Update version number
         if: startsWith(github.ref, 'refs/tags/')
         run: sed -i -e "s/0.0.0/${GITHUB_REF##*/}/" pyproject.toml
       - name: Set up Python
-        uses: actions/setup-python@0a5c61591373683505ea898e09a3ea4f39ef2b9c # v5
+        uses: actions/setup-python@82c7e631bb3cdc910f68e0081d67478d79c6982d # v5
         with:
           python-version: ${{ matrix.python-version }}
       - name: Check isort, black, and flake8
@@ -57,20 +57,20 @@ jobs:
       - name: Build
         run: poetry build
       - name: Upload dist artifact
-        uses: actions/upload-artifact@26f96dfa697d77e81fd5907df203aa23a56210a8 # v4
+        uses: actions/upload-artifact@65462800fd760344b1a7b4382951275a0abb4808 # v4
         with:
           name: dist
           path: dist
           if-no-files-found: error
       - name: Upload coverage HTML artifact
-        uses: actions/upload-artifact@26f96dfa697d77e81fd5907df203aa23a56210a8 # v4
+        uses: actions/upload-artifact@65462800fd760344b1a7b4382951275a0abb4808 # v4
         with:
           name: coverage
           path: htmlcov
           if-no-files-found: error
       - name: Upload Sphinx documentation
         if: ${{ matrix.python-version == '3.9'}}
-        uses: actions/upload-artifact@26f96dfa697d77e81fd5907df203aa23a56210a8 # v4
+        uses: actions/upload-artifact@65462800fd760344b1a7b4382951275a0abb4808 # v4
         with:
           name: documentation
           path: docs/build/html
@@ -83,9 +83,9 @@ jobs:
     if: startsWith(github.ref, 'refs/tags/')
     steps:
       - name: Check out code
-        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4
+        uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29 # v4
       - name: Download artifacts
-        uses: actions/download-artifact@6b208ae046db98c579e8a3aa621ab581ff575935 # v4
+        uses: actions/download-artifact@65a9edc5881444af0b9093a5e628f2fe47ea3b2e # v4
         with:
           name: dist
           path: dist
