@@ -6,9 +6,6 @@ on:
     tags:
       - '*'
   pull_request:
-permissions:
-  # https://github.community/t/permissions-nesecary-to-comment-on-a-pr/179047/5
-  pull-requests: write
 jobs:
   build:
     name: Build
@@ -18,12 +15,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check out code
-        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4
+        uses: actions/checkout@v4
       - name: Update version number
         if: startsWith(github.ref, 'refs/tags/')
         run: sed -i -e "s/0.0.0/${GITHUB_REF##*/}/" pyproject.toml
       - name: Set up Python
-        uses: actions/setup-python@0a5c61591373683505ea898e09a3ea4f39ef2b9c # v5
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
       - name: Check isort, black, and flake8
@@ -33,7 +30,7 @@ jobs:
           black --line-length 79 .
           flake8 .
       - name: Install Python Poetry
-        uses: snok/install-poetry@93ada01c735cc8a383ce0ce2ae205a21c415379b # v1.3.4
+        uses: snok/install-poetry@v1.3.4
         with:
           version: 1.4.2
       - name: Install project dependencies
@@ -46,31 +43,33 @@ jobs:
           poetry run python3 -m coverage html
       - name: Publish coverage report to job summary
         # publishing only once
-        if: ${{ matrix.python-version == '3.9'}}
+        if: ${{ matrix.python-version == vars.ARCALOT_PYTHON_VERSION }}
         run: |
           poetry run html2text --ignore-images --ignore-links -b 0 htmlcov/index.html >> $GITHUB_STEP_SUMMARY
       - name: Generate documentation
-        if: ${{ matrix.python-version == '3.9'}}
+        if: ${{ matrix.python-version == vars.ARCALOT_PYTHON_VERSION }}
         run: |
           poetry run sphinx-apidoc -o docs/ -f -a -e src/ --doc-project "Kubernetes library for Arcaflow"
           poetry run make -C docs html
       - name: Build
         run: poetry build
       - name: Upload dist artifact
-        uses: actions/upload-artifact@26f96dfa697d77e81fd5907df203aa23a56210a8 # v4
+        if: ${{ matrix.python-version == vars.ARCALOT_PYTHON_VERSION }}
+        uses: actions/upload-artifact@v4
         with:
           name: dist
           path: dist
           if-no-files-found: error
       - name: Upload coverage HTML artifact
-        uses: actions/upload-artifact@26f96dfa697d77e81fd5907df203aa23a56210a8 # v4
+        if: ${{ matrix.python-version == vars.ARCALOT_PYTHON_VERSION }}
+        uses: actions/upload-artifact@v4
         with:
           name: coverage
           path: htmlcov
           if-no-files-found: error
       - name: Upload Sphinx documentation
-        if: ${{ matrix.python-version == '3.9'}}
-        uses: actions/upload-artifact@26f96dfa697d77e81fd5907df203aa23a56210a8 # v4
+        if: ${{ matrix.python-version == vars.ARCALOT_PYTHON_VERSION }}
+        uses: actions/upload-artifact@v4
         with:
           name: documentation
           path: docs/build/html
@@ -83,9 +82,9 @@ jobs:
     if: startsWith(github.ref, 'refs/tags/')
     steps:
       - name: Check out code
-        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4
+        uses: actions/checkout@v4
       - name: Download artifacts
-        uses: actions/download-artifact@6b208ae046db98c579e8a3aa621ab581ff575935 # v4
+        uses: actions/download-artifact@v4
         with:
           name: dist
           path: dist
