@@ -11,7 +11,7 @@ jobs:
     name: Build
     strategy:
       matrix:
-        python-version: [ '3.9', '3.10', 'pypy3.9' ]
+        python-version: ${{ fromJSON(vars.ARCALOT_PYTHON_SUPPORTED_VERSIONS) }}
     runs-on: ubuntu-latest
     steps:
       - name: Check out code
