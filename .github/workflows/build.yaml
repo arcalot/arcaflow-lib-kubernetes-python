@@ -46,30 +46,32 @@ jobs:
           poetry run python3 -m coverage html
       - name: Publish coverage report to job summary
         # publishing only once
-        if: ${{ matrix.python-version == '3.9'}}
+        if: ${{ matrix.python-version == vars.ARCALOT_PYTHON_VERSION }}
         run: |
           poetry run html2text --ignore-images --ignore-links -b 0 htmlcov/index.html >> $GITHUB_STEP_SUMMARY
       - name: Generate documentation
-        if: ${{ matrix.python-version == '3.9'}}
+        if: ${{ matrix.python-version == vars.ARCALOT_PYTHON_VERSION }}
         run: |
           poetry run sphinx-apidoc -o docs/ -f -a -e src/ --doc-project "Kubernetes library for Arcaflow"
           poetry run make -C docs html
       - name: Build
         run: poetry build
       - name: Upload dist artifact
+        if: ${{ matrix.python-version == vars.ARCALOT_PYTHON_VERSION }}
         uses: actions/upload-artifact@v4
         with:
           name: dist
           path: dist
           if-no-files-found: error
       - name: Upload coverage HTML artifact
+        if: ${{ matrix.python-version == vars.ARCALOT_PYTHON_VERSION }}
         uses: actions/upload-artifact@v4
         with:
           name: coverage
           path: htmlcov
           if-no-files-found: error
       - name: Upload Sphinx documentation
-        if: ${{ matrix.python-version == '3.9'}}
+        if: ${{ matrix.python-version == vars.ARCALOT_PYTHON_VERSION }}
         uses: actions/upload-artifact@v4
         with:
           name: documentation
