@@ -8,7 +8,7 @@ readme = "README.md"
 
 [tool.poetry.dependencies]
 python = "^3.9"
-arcaflow-plugin-sdk = "^0.14.0"
+arcaflow-plugin-sdk = "^0.14.1"
 kubernetes = ">=25.3.0"
 PyYAML = ">=5.4"
 pylint = "^3.0.0"
