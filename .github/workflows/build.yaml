@@ -12,8 +12,6 @@ jobs:
     strategy:
       matrix:
         python-version: ${{ fromJSON(vars.ARCALOT_PYTHON_SUPPORTED_VERSIONS) }}
-        exclude:
-          - python-version: 3.12
     runs-on: ubuntu-latest
     steps:
       - name: Check out code
