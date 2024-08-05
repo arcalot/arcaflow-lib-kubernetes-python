@@ -30,7 +30,7 @@ jobs:
           black --line-length 79 .
           flake8 .
       - name: Install Python Poetry
-        uses: snok/install-poetry@v1.3.4
+        uses: snok/install-poetry@v1.4.1
         with:
           version: 1.4.2
       - name: Install project dependencies
